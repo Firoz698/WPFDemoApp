@@ -1,13 +1,11 @@
 ﻿using System.Collections.ObjectModel;
 using System.ComponentModel;
-using System.Data.SqlClient;
 using System.Runtime.CompilerServices;
 using System.Windows.Input;
 using WPFDemoApp.Data;
 using WPFDemoApp.Helpers;
 using WPFDemoApp.Models;
 using Microsoft.Data.SqlClient;
-
 
 namespace WPFDemoApp.ViewModels
 {
@@ -66,7 +64,7 @@ namespace WPFDemoApp.ViewModels
             con.Open();
 
             var cmd = new SqlCommand(
-                "SELECT * FROM Employees WHERE Name LIKE @s OR Email LIKE @s", con);
+                "SELECT * FROM Employees WHERE Name LIKE @s OR Email LIKE @s OR Department LIKE @s", con);
 
             cmd.Parameters.AddWithValue("@s", $"%{SearchText}%");
 
@@ -103,7 +101,7 @@ namespace WPFDemoApp.ViewModels
         {
             if (Employees.Count == 0) return;
 
-            var emp = Employees[^1];
+            var emp = Employees[^1]; // delete last employee as example
 
             using var con = new AppDbContext().GetConnection();
             con.Open();

@@ -1,57 +1,44 @@
 ﻿using Microsoft.Data.SqlClient;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
 using WPFDemoApp.Data;
-using WPFDemoApp.Helpers;
-using System.Data.SqlClient;
 
 namespace WPFDemoApp.Views
 {
-    /// <summary>
-    /// Interaction logic for LoginView.xaml
-    /// </summary>
-    public class LoginViewModel
+    public partial class LoginView : Window
     {
-        public string UserName { get; set; }
-        public ICommand LoginCommand { get; }
-
-        public LoginViewModel()
+        public LoginView()
         {
-            LoginCommand = new RelayCommand(Login);
+            InitializeComponent();
         }
 
-        private void Login(object password)
+        private void BtnLogin_Click(object sender, RoutedEventArgs e)
         {
+            string username = txtUsername.Text;
+            string password = pwd.Password;
+
             using var con = new AppDbContext().GetConnection();
             con.Open();
 
             var cmd = new SqlCommand(
                 "SELECT COUNT(*) FROM Users WHERE UserName=@u AND Password=@p", con);
 
-            cmd.Parameters.AddWithValue("@u", UserName);
-            cmd.Parameters.AddWithValue("@p", password?.ToString());
+            cmd.Parameters.AddWithValue("@u", username);
+            cmd.Parameters.AddWithValue("@p", password);
 
             int count = (int)cmd.ExecuteScalar();
 
             if (count > 0)
             {
-                new DashboardView().Show();
-                Application.Current.MainWindow.Close();
+                // Login success
+                var dashboard = new DashboardView();
+                dashboard.Show();
+
+                // Close login window
+                this.Close();
             }
             else
             {
-                MessageBox.Show("Invalid Login");
+                MessageBox.Show("Invalid Login", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
     }

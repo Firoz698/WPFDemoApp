@@ -1,52 +1,34 @@
 ﻿using Microsoft.Data.SqlClient;
-using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
 using WPFDemoApp.Data;
-using WPFDemoApp.Helpers;
 using WPFDemoApp.Models;
 
 namespace WPFDemoApp.Views
 {
-    /// <summary>
-    /// Interaction logic for EmployeeView.xaml
-    /// </summary>
-    public class EmployeeViewModel
+    public partial class EmployeeView : Window
     {
-        public ObservableCollection<Employee> Employees { get; set; } = new();
-        public string Name { get; set; }
-        public string Email { get; set; }
-        public string Department { get; set; }
-        public string SearchText { get; set; }
+        private ObservableCollection<Employee> Employees = new ObservableCollection<Employee>();
 
-        public ICommand SaveCommand { get; }
-
-        public EmployeeViewModel()
+        public EmployeeView()
         {
-            SaveCommand = new RelayCommand(Save);
+            InitializeComponent();
+            dgEmployees.ItemsSource = Employees;
             LoadEmployees();
         }
 
-        private void LoadEmployees()
+        private void LoadEmployees(string search = "")
         {
             Employees.Clear();
+
             using var con = new AppDbContext().GetConnection();
             con.Open();
 
-            var cmd = new SqlCommand("SELECT * FROM Employees", con);
-            var reader = cmd.ExecuteReader();
+            var cmd = new SqlCommand(
+                "SELECT * FROM Employees WHERE Name LIKE @s OR Email LIKE @s OR Department LIKE @s", con);
+            cmd.Parameters.AddWithValue("@s", $"%{search}%");
 
+            var reader = cmd.ExecuteReader();
             while (reader.Read())
             {
                 Employees.Add(new Employee
@@ -59,20 +41,47 @@ namespace WPFDemoApp.Views
             }
         }
 
-        private void Save(object obj)
+        private void BtnSave_Click(object sender, RoutedEventArgs e)
         {
             using var con = new AppDbContext().GetConnection();
             con.Open();
 
             var cmd = new SqlCommand(
-                "INSERT INTO Employees VALUES (@n,@e,@d)", con);
-
-            cmd.Parameters.AddWithValue("@n", Name);
-            cmd.Parameters.AddWithValue("@e", Email);
-            cmd.Parameters.AddWithValue("@d", Department);
+                "INSERT INTO Employees (Name, Email, Department) VALUES (@n,@e,@d)", con);
+            cmd.Parameters.AddWithValue("@n", txtName.Text);
+            cmd.Parameters.AddWithValue("@e", txtEmail.Text);
+            cmd.Parameters.AddWithValue("@d", txtDepartment.Text);
 
             cmd.ExecuteNonQuery();
             LoadEmployees();
+
+            MessageBox.Show("Employee saved!");
+        }
+
+        private void BtnDelete_Click(object sender, RoutedEventArgs e)
+        {
+            if (dgEmployees.SelectedItem is Employee emp)
+            {
+                using var con = new AppDbContext().GetConnection();
+                con.Open();
+
+                var cmd = new SqlCommand("DELETE FROM Employees WHERE Id=@id", con);
+                cmd.Parameters.AddWithValue("@id", emp.Id);
+
+                cmd.ExecuteNonQuery();
+                LoadEmployees();
+
+                MessageBox.Show("Employee deleted!");
+            }
+            else
+            {
+                MessageBox.Show("Please select an employee to delete.");
+            }
+        }
+
+        private void TxtSearch_TextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e)
+        {
+            LoadEmployees(txtSearch.Text);
         }
     }
 }

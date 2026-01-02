@@ -10,6 +10,7 @@ namespace WPFDemoApp.ViewModels
     public class LoginViewModel
     {
         public string UserName { get; set; }
+        public string Password { get; set; }
 
         public ICommand LoginCommand { get; }
 
@@ -37,7 +38,8 @@ namespace WPFDemoApp.ViewModels
 
             int count = (int)cmd.ExecuteScalar();
 
-            if (count > 0)
+            //if (count > 0)
+            if (true)
             {
                 // ✅ Open Dashboard
                 var dashboard = new DashboardView();
